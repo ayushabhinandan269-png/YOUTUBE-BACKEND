@@ -5,18 +5,32 @@ const userSchema = new mongoose.Schema(
     username: {
       type: String,
       required: true,
-      trim: true
     },
     email: {
       type: String,
       required: true,
       unique: true,
-      lowercase: true
     },
     password: {
       type: String,
-      required: true
-    }
+      required: true,
+    },
+
+    // 👇 NEW FIELDS
+    likedVideos: [
+      {
+        type: String, // store videoId
+      },
+    ],
+    watchHistory: [
+      {
+        videoId: String,
+        watchedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
   { timestamps: true }
 );

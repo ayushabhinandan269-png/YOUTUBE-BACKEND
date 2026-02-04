@@ -4,6 +4,8 @@ import cors from "cors";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import protect from "./middleware/authMiddleware.js";
+import userRoutes from "./routes/userRoutes.js";
+
 dotenv.config();
 connectDB();
 
@@ -13,7 +15,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
-
+app.use("/api/user", userRoutes); 
 app.get("/api/protected", protect, (req, res) => {
   res.json({ message: "Protected route working" });
 });
