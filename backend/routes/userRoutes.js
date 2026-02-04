@@ -37,20 +37,44 @@ router.get("/likes", protect, async (req, res) => {
 
 /* ================= SAVE HISTORY ================= */
 router.post("/history/:videoId", protect, async (req, res) => {
-  const { videoId } = req.params;
-  const user = await User.findById(req.user.id);
+  try {
+    const { videoId } = req.params;
 
-  user.watchHistory.unshift({ videoId });
-  user.watchHistory = user.watchHistory.slice(0, 100);
+    await User.findByIdAndUpdate(
+      req.user, // because in middleware: req.user = decoded.id
+      {
+        $pull: { watchHistory: { videoId } }, // remove if already exists
+      }
+    );
 
-  await user.save();
-  res.json({ message: "History saved" });
+    await User.findByIdAndUpdate(
+      req.user,
+      {
+        $push: {
+          watchHistory: {
+            $each: [{ videoId }],
+            $position: 0,   // add to top
+            $slice: 100     // keep only last 100
+          }
+        }
+      }
+    );
+
+    res.json({ message: "History saved" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 /* ================= GET HISTORY ================= */
 router.get("/history", protect, async (req, res) => {
-  const user = await User.findById(req.user.id);
-  res.json(user.watchHistory);
+  try {
+    const user = await User.findById(req.user).select("watchHistory");
+    res.json(user.watchHistory);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
+
 
 export default router;
