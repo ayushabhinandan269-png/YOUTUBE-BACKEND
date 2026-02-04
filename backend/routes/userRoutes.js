@@ -6,32 +6,32 @@ const router = express.Router();
 
 /* ================= LIKE / UNLIKE ================= */
 router.post("/like/:videoId", protect, async (req, res) => {
-  const { videoId } = req.params;
-  const user = await User.findById(req.user.id);
+  try {
+    const { videoId } = req.params;
+    const user = await User.findById(req.user);
 
-  if (!user) {
-    return res.status(404).json({ message: "User not found" });
+    const index = user.likedVideos.findIndex(
+      v => v.videoId === videoId
+    );
+
+    if (index > -1) {
+      user.likedVideos.splice(index, 1);
+      await user.save();
+      return res.json({ liked: false });
+    }
+
+    user.likedVideos.push({ videoId });
+    await user.save();
+
+    res.json({ liked: true });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
-
-  const alreadyLiked = user.likedVideos.includes(videoId);
-
-  if (alreadyLiked) {
-    user.likedVideos = user.likedVideos.filter(id => id !== videoId);
-  } else {
-    user.likedVideos.push(videoId);
-  }
-
-  await user.save();
-
-  res.json({
-    liked: !alreadyLiked,
-    likedVideos: user.likedVideos,
-  });
 });
 
 /* ================= GET LIKED ================= */
 router.get("/likes", protect, async (req, res) => {
-  const user = await User.findById(req.user.id);
+  const user = await User.findById(req.user).select("likedVideos");
   res.json(user.likedVideos);
 });
 
@@ -40,41 +40,48 @@ router.post("/history/:videoId", protect, async (req, res) => {
   try {
     const { videoId } = req.params;
 
-    await User.findByIdAndUpdate(
-      req.user, // because in middleware: req.user = decoded.id
-      {
-        $pull: { watchHistory: { videoId } }, // remove if already exists
-      }
-    );
+    await User.findByIdAndUpdate(req.user, {
+      $pull: { watchHistory: { videoId } },
+    });
 
-    await User.findByIdAndUpdate(
-      req.user,
-      {
-        $push: {
-          watchHistory: {
-            $each: [{ videoId }],
-            $position: 0,   // add to top
-            $slice: 100     // keep only last 100
-          }
-        }
-      }
-    );
+    await User.findByIdAndUpdate(req.user, {
+      $push: {
+        watchHistory: {
+          $each: [{ videoId }],
+          $position: 0,
+          $slice: 100,
+        },
+      },
+    });
 
     res.json({ message: "History saved" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 });
 
 /* ================= GET HISTORY ================= */
 router.get("/history", protect, async (req, res) => {
-  try {
-    const user = await User.findById(req.user).select("watchHistory");
-    res.json(user.watchHistory);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+  const user = await User.findById(req.user).select("watchHistory");
+  res.json(user.watchHistory);
 });
 
+/* ================= SUBSCRIBE ================= */
+router.post("/subscribe/:channel", protect, async (req, res) => {
+  const { channel } = req.params;
+
+  await User.findByIdAndUpdate(req.user, {
+    $addToSet: { subscriptions: { channelName: channel } },
+  });
+
+  res.json({ message: "Subscribed" });
+});
+
+/* ================= GET SUBSCRIPTIONS ================= */
+router.get("/subscriptions", protect, async (req, res) => {
+  const user = await User.findById(req.user).select("subscriptions");
+  res.json(user.subscriptions);
+});
 
 export default router;
+

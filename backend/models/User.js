@@ -16,12 +16,12 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
 
-    // 👇 NEW FIELDS
     likedVideos: [
       {
-        type: String, // store videoId
+        videoId: String,
       },
     ],
+
     watchHistory: [
       {
         videoId: String,
@@ -29,6 +29,12 @@ const userSchema = new mongoose.Schema(
           type: Date,
           default: Date.now,
         },
+      },
+    ],
+
+    subscriptions: [
+      {
+        channelName: String,
       },
     ],
   },
