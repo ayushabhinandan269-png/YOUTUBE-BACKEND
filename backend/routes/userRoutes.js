@@ -19,19 +19,17 @@ router.post("/like/:videoId", protect, async (req, res) => {
     );
 
     if (index > -1) {
-      // UNLIKE
       user.likedVideos.splice(index, 1);
       await user.save();
       return res.json({ liked: false });
     }
 
-    // LIKE
     user.likedVideos.push({ videoId });
     await user.save();
 
     res.json({ liked: true });
   } catch (err) {
-    console.error("LIKE ERROR:", err.message);
+    console.error("LIKE ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -46,7 +44,7 @@ router.get("/likes", protect, async (req, res) => {
 
     res.json(user.likedVideos);
   } catch (err) {
-    console.error("GET LIKES ERROR:", err.message);
+    console.error("GET LIKES ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -56,25 +54,27 @@ router.post("/history/:videoId", protect, async (req, res) => {
   try {
     const { videoId } = req.params;
 
-    // Remove old entry if exists
-    await User.findByIdAndUpdate(req.user, {
-      $pull: { watchHistory: { videoId } },
-    });
+    const user = await User.findById(req.user);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-    // Add to top, keep max 100
-    await User.findByIdAndUpdate(req.user, {
-      $push: {
-        watchHistory: {
-          $each: [{ videoId }],
-          $position: 0,
-          $slice: 100,
-        },
-      },
-    });
+    // Remove if already exists
+    user.watchHistory = user.watchHistory.filter(
+      v => v.videoId !== videoId
+    );
+
+    // Add to top
+    user.watchHistory.unshift({ videoId });
+
+    // Keep last 100
+    user.watchHistory = user.watchHistory.slice(0, 100);
+
+    await user.save();
 
     res.json({ message: "History saved" });
   } catch (err) {
-    console.error("HISTORY ERROR:", err.message);
+    console.error("HISTORY ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -89,12 +89,12 @@ router.get("/history", protect, async (req, res) => {
 
     res.json(user.watchHistory);
   } catch (err) {
-    console.error("GET HISTORY ERROR:", err.message);
+    console.error("GET HISTORY ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
-/* ================= SUBSCRIBE TO CHANNEL ================= */
+/* ================= SUBSCRIBE ================= */
 router.post("/subscribe/:channel", protect, async (req, res) => {
   try {
     const { channel } = req.params;
@@ -105,7 +105,7 @@ router.post("/subscribe/:channel", protect, async (req, res) => {
 
     res.json({ message: "Subscribed" });
   } catch (err) {
-    console.error("SUBSCRIBE ERROR:", err.message);
+    console.error("SUBSCRIBE ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -120,10 +120,9 @@ router.get("/subscriptions", protect, async (req, res) => {
 
     res.json(user.subscriptions);
   } catch (err) {
-    console.error("GET SUBSCRIPTIONS ERROR:", err.message);
+    console.error("GET SUBSCRIPTIONS ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
 export default router;
-
