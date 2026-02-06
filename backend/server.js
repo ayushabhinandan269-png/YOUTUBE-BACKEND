@@ -7,6 +7,7 @@ import protect from "./middleware/authMiddleware.js";
 import userRoutes from "./routes/userRoutes.js";
 import commentRoutes from "./routes/commentRoutes.js";
 import videoRoutes from "./routes/videoRoutes.js";
+import channelRoutes from "./routes/channelRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -21,7 +22,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes); 
 app.use("/api/comments", commentRoutes);
 app.use("/api/videos", videoRoutes);
-
+app.use("/api/channels", channelRoutes);
 app.get("/api/protected", protect, (req, res) => {
   res.json({ message: "Protected route working" });
 });

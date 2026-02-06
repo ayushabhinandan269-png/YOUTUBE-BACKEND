@@ -54,30 +54,41 @@ router.post("/history/:videoId", protect, async (req, res) => {
   try {
     const { videoId } = req.params;
 
+    if (!videoId) {
+      return res.status(400).json({ message: "Video ID required" });
+    }
+
     const user = await User.findById(req.user);
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Remove if already exists
+    // 🔥 FIX: ensure watchHistory always exists
+    if (!Array.isArray(user.watchHistory)) {
+      user.watchHistory = [];
+    }
+
+    // remove duplicates
     user.watchHistory = user.watchHistory.filter(
-      v => v.videoId !== videoId
+      (item) => item.videoId !== videoId
     );
 
-    // Add to top
+    // add to top
     user.watchHistory.unshift({ videoId });
 
-    // Keep last 100
+    // limit size
     user.watchHistory = user.watchHistory.slice(0, 100);
 
     await user.save();
 
     res.json({ message: "History saved" });
-  } catch (err) {
-    console.error("HISTORY ERROR:", err);
+  } catch (error) {
+    console.error("WATCH HISTORY ERROR:", error);
     res.status(500).json({ message: "Server error" });
   }
 });
+
 
 /* ================= GET WATCH HISTORY ================= */
 router.get("/history", protect, async (req, res) => {
