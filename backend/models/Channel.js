@@ -7,20 +7,17 @@ const channelSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
-    description: {
-      type: String,
-    },
+    description: String,
+
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    avatar: {
-      type: String,
-    },
-    banner: {
-      type: String,
-    },
+
+    avatar: String,
+    banner: String,
+
     subscribers: {
       type: Number,
       default: 0,
@@ -30,4 +27,5 @@ const channelSchema = new mongoose.Schema(
 );
 
 export default mongoose.model("Channel", channelSchema);
+
 

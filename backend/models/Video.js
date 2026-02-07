@@ -13,10 +13,12 @@ const videoSchema = new mongoose.Schema(
     title: {
       type: String,
       required: true,
+      trim: true,
     },
 
     description: {
       type: String,
+      default: "",
     },
 
     videoUrl: {
@@ -38,6 +40,7 @@ const videoSchema = new mongoose.Schema(
     channel: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Channel",
+      required: true,
     },
 
     uploader: {
@@ -72,3 +75,4 @@ const videoSchema = new mongoose.Schema(
 );
 
 export default mongoose.model("Video", videoSchema);
+

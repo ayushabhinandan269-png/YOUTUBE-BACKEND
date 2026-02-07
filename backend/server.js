@@ -8,7 +8,7 @@ import userRoutes from "./routes/userRoutes.js";
 import commentRoutes from "./routes/commentRoutes.js";
 import videoRoutes from "./routes/videoRoutes.js";
 import channelRoutes from "./routes/channelRoutes.js";
-
+import playlistRoutes from "./routes/playlistRoutes.js";
 dotenv.config();
 connectDB();
 
@@ -23,6 +23,7 @@ app.use("/api/user", userRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/videos", videoRoutes);
 app.use("/api/channels", channelRoutes);
+app.use("/api/playlists", playlistRoutes);
 app.get("/api/protected", protect, (req, res) => {
   res.json({ message: "Protected route working" });
 });
