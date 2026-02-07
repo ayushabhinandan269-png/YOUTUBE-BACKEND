@@ -83,3 +83,35 @@ export const getChannelVideos = async (req, res) => {
   const videos = await Video.find({ uploader: channel.owner });
   res.json(videos);
 };
+/* ================= UPDATE CHANNEL ================= */
+export const updateChannel = async (req, res) => {
+  try {
+    const { channelName, description } = req.body;
+    const channel = await Channel.findById(req.params.id);
+
+    if (!channel) {
+      return res.status(404).json({ message: "Channel not found" });
+    }
+
+    // owner check
+    if (channel.owner.toString() !== req.user) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    if (channelName) channel.channelName = channelName;
+    if (description) channel.description = description;
+
+    if (req.files?.avatar) {
+      channel.avatar = `/uploads/${req.files.avatar[0].filename}`;
+    }
+
+    if (req.files?.banner) {
+      channel.banner = `/uploads/${req.files.banner[0].filename}`;
+    }
+
+    await channel.save();
+    res.json(channel);
+  } catch (err) {
+    res.status(500).json({ message: "Update failed" });
+  }
+};
